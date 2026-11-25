@@ -1,0 +1,3 @@
+company,title,location,work_mode,portal,salary,description,job_url
+Example Technologies,Manual QA Engineer,India,Hybrid,Naukri,Negotiable,"3-5 years QA experience. Manual testing, test case design, regression testing, SQL, API testing, Postman, Jira and Agile.",https://example.com/jobs/qa-001
+Demo Software,QA Analyst,India,Remote,Indeed,Not listed,"Experience in functional testing, test scenarios, defect tracking, SQL validation and Agile delivery.",https://example.com/jobs/qa-002
