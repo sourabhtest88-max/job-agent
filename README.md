@@ -1,72 +1,78 @@
-# QA Job Application Agent — Version 1
+# QA Job Application Agent — Version 2
 
-A beginner-friendly local dashboard for resume parsing, job-description matching, duplicate prevention, HR message drafting and application tracking.
+Version 2 preserves the original Streamlit dashboard, resume parsing, CSV import, keyword matching, HR message drafting, duplicate prevention, SQLite tracker and CSV export. It adds a candidate profile and cautious Playwright browser assistance for employer/ATS application forms.
 
-## Important scope
+## Important portal and automation limits
 
-This starter version does **not** scrape Naukri, LinkedIn or Indeed, log in to accounts, bypass CAPTCHAs, or submit applications. Import job details from permitted CSV exports, job alerts, official APIs where available, or job links you collect. Review each job and submit through the portal yourself.
-
-The matching score is a simple keyword-based baseline, not an AI hiring prediction. We can add an LLM-based analysis step after the basic workflow works.
+- LinkedIn, Naukri and Indeed can be used as places where you find job links, but this generic helper intentionally does **not** automate submission on those portal domains. Follow each portal's current terms and use its own application flow.
+- The browser helper is intended for employer career sites / ATS pages where automation is permitted. Website forms differ, so field detection is best-effort and must be checked.
+- It does not bypass logins, CAPTCHAs, bot checks, queues, paywalls or other access controls. If a human verification or sign-in wall is detected, it stops.
+- Auto-submit is OFF by default. To enable it, you must explicitly opt in, provide truthful candidate details, and allow-list exact employer/ATS domains in the Candidate profile tab. It submits only if required visible fields are populated and it finds exactly one clearly named submit button. Otherwise it leaves the page unsubmitted.
+- A click is recorded as **Submission attempted**, not proof of successful application. Verify the employer confirmation page/email.
+- Never enter fabricated answers. Questions not recognized by the helper must be completed manually. Do not store passwords in this app.
 
 ## 1. Install Python
 
-Install Python 3.11 or newer from https://www.python.org/downloads/ . During Windows installation, select **Add Python to PATH**.
+Install Python 3.11+ from https://www.python.org/downloads/windows/ . During setup, check **Add python.exe to PATH**. Open a new PowerShell window after installation.
 
-## 2. Open the project folder
+## 2. Install project dependencies
 
-Open Command Prompt or PowerShell in this folder.
+From this folder in PowerShell:
 
-## 3. Create a virtual environment
-
-Windows:
 ```powershell
-py -m venv .venv
-.venv\Scripts\activate
-```
-
-macOS/Linux:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-## 4. Install packages
-
-```bash
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python -m playwright install chromium
 ```
 
-## 5. Start the app
+If PowerShell blocks activation, run this once for the current terminal:
 
-```bash
-streamlit run app.py
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
 ```
 
-The app should open in your browser at `http://localhost:8501`.
+## 3. Start the dashboard
 
-## 6. Use the app
+```powershell
+python -m streamlit run app.py
+```
 
-1. Open the Resume tab and upload your PDF, DOCX or TXT resume.
-2. Open Import jobs and download the sample CSV to see the required format.
-3. Replace the sample rows with real job postings you are permitted to collect.
-4. Upload the CSV and click Import these jobs.
-5. Open Match & review, inspect each job and use the original job link.
-6. Edit the suggested HR message and attach your resume when applying.
-7. Record the result in the tracker.
+## 4. Configure and use
+
+1. Resume tab: upload your current PDF, DOCX or TXT resume. The file is saved locally under `data/` for form upload.
+2. Candidate profile tab: enter your accurate name, email, phone, location and experience. Save the profile.
+3. Import jobs tab: upload a CSV with `company,title,location,work_mode,portal,salary,description,job_url`.
+4. Match & apply tab: inspect the match, original posting, and suggested HR note. Click **Fill / apply** to open the job page in Chromium and attempt safe field filling.
+5. For a site that requires login, sign in manually once using the helper command shown in the Candidate profile tab. Run it from another PowerShell terminal in this project folder:
+
+```powershell
+python browser_apply.py --login "https://careers.example.com/"
+```
+
+The browser profile is stored locally in `data/browser_profile/`. Do not share it.
+6. Auto-submit remains disabled unless you turn it on, confirm consent and add the employer/ATS domain to the allowlist. Start with one employer test page and verify the result.
+7. Application tracker: review statuses and export the tracker CSV.
 
 ## CSV columns
 
-Required: `company`, `title`, `description`, `job_url`
+All eight columns are supported: `company`, `title`, `location`, `work_mode`, `portal`, `salary`, `description`, `job_url`. Minimum required fields for import are `company`, `title`, `description`, `job_url`.
 
-Optional: `location`, `work_mode`, `portal`, `salary`
+## Local data and privacy
 
-## Data storage
+SQLite tracker: `data/applications.db`  
+Candidate profile: `data/candidate_profile.json`  
+Resume copy: `data/resume.*`  
+Persistent browser session: `data/browser_profile/`
 
-Application records are stored locally in `data/applications.db` (SQLite). Export the tracker as CSV from the dashboard. Keep your resume private and do not commit it to a public Git repository.
+These files can contain personal information and authenticated sessions. Keep them private, do not commit them to Git, and delete them from the machine when no longer needed. The app does not send your resume to a cloud service by default.
 
 ## Troubleshooting
 
-- If `streamlit` is not recognized, activate `.venv` and run `python -m streamlit run app.py`.
-- If PDF text is blank, the PDF may be scanned/image-only. Use a text-based PDF or DOCX.
-- If duplicate jobs are skipped, the same company/title/job URL combination is already stored.
+- `python` not recognized: install Python and check **Add python.exe to PATH**, then reopen PowerShell.
+- `playwright` not installed: activate `.venv`, run `python -m pip install -r requirements.txt`, then `python -m playwright install chromium`.
+- Login/CAPTCHA detected: complete sign-in or verification manually; the helper will not bypass it.
+- No form fields detected: the employer page uses a custom form. Complete it manually; the helper reports that it could not fill fields.
+- No submission: confirm the domain is allow-listed, auto-submit is enabled, all required fields are complete, and the page has one unambiguous submit button. The app may still require manual completion.

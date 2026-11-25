@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/*.db
+data/resume.*
+data/candidate_profile.json
+data/browser_profile/
