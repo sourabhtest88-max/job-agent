@@ -1,4 +1,4 @@
-import io, re, sqlite3, json, shutil
+import io, re, sqlite3, json, shutil, subprocess, sys
 from datetime import date, datetime
 from pathlib import Path
 
@@ -13,6 +13,15 @@ DB_PATH = APP_DIR / "data" / "applications.db"
 DB_PATH.parent.mkdir(exist_ok=True)
 
 st.set_page_config(page_title="QA Job Application Agent", page_icon="🧪", layout="wide")
+
+@st.cache_resource
+def install_browser():
+    subprocess.run(
+        [sys.executable, "-m", "playwright", "install", "chromium"],
+        check=True
+    )
+
+install_browser()
 
 def db():
     conn = sqlite3.connect(DB_PATH)
